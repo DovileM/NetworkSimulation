@@ -22,12 +22,23 @@ namespace NetworkSimulation
             vertexes.Add(value, newVertex);
         }
 
-        public void AddNeighboor(int first, int second, int weight)
+        public void AddNeighboor(int first, int second)
         {
             if ((vertexes.Count >= first) && (vertexes.Count >= second))
             {
-                vertexes[first].neighboors.Add(vertexes[second], weight);
-                vertexes[second].neighboors.Add(vertexes[first], weight);
+                vertexes[first].neighboors.Add(vertexes[second], 0);
+                vertexes[second].neighboors.Add(vertexes[first], 0);
+            }
+            else
+                Console.WriteLine(string.Format("Can't add {0} and {1}", first, second));
+        }
+
+        public void ChangeNeighboorWeight(int first, int second, int weight)
+        {
+            if ((vertexes.Count >= first) && (vertexes.Count >= second))
+            {
+                vertexes[first].neighboors[vertexes[second]] = weight;
+                vertexes[second].neighboors[vertexes[first]] = weight;
             }
             else
                 Console.WriteLine(string.Format("Can't add {0} and {1}", first, second));

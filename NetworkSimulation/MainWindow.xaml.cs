@@ -25,9 +25,12 @@ namespace NetworkSimulation
         private Graph _graph;
         private Dictionary<int, Point> _possitions;
         private Dictionary<int, Ellipse> _ellipses;
+        private Dictionary<int, Grid> _grid;
         private bool mouseIsDown;
-        private int _currentVertex;
-        private Line line;
+        private int _fromVertex;
+        private int _toVertex;
+        private Line _line;
+        private List<VertexPath> _text;
 
         public MainWindow()
         {
@@ -35,37 +38,12 @@ namespace NetworkSimulation
             _vertex = 0;
             _possitions = new Dictionary<int, Point>();
             _ellipses = new Dictionary<int, Ellipse>();
+            _grid = new Dictionary<int, Grid>();
+            _text = new List<VertexPath>();
             _graph = new Graph();
-            //_graph.AddVertex(0);
-            //_graph.AddVertex(1);
-            //_graph.AddVertex(2);
-            //_graph.AddVertex(3);
-            //_graph.AddVertex(4);
-            //_graph.AddVertex(5);
-            //_graph.AddVertex(6);
-
-
-            /*_graph.AddNeighboor(0, 1, 5);
-            _graph.AddNeighboor(0, 2, 31);
-            _graph.AddNeighboor(0, 3, 20);
-            _graph.AddNeighboor(1, 4, 7);
-            _graph.AddNeighboor(2, 4, 10);
-            _graph.AddNeighboor(2, 5, 1);
-            _graph.AddNeighboor(3, 5, 5);
-            _graph.AddNeighboor(4, 6, 40);
-            _graph.AddNeighboor(5, 6, 14);
-
-            Console.WriteLine(_graph.PrintGraph());
-
-            foreach (var vertex in _graph.vertexes)
-            {
-                foreach (var n in vertex.Value.neighboors)
-                {
-                    Console.WriteLine("Key: " + vertex.Key.ToString()+" neighboor: " + n.Key.value + " weight: " + n.Value.ToString());
-                }
-                Console.WriteLine();
-            }
-
+            _line = new Line();
+            
+            /*
             Console.WriteLine("Shortest path by weight:");
             Console.WriteLine("From: 0 to: 6 " + _graph.FindShortestPathByWeight(0, 6));
             Console.WriteLine("From: 0 to: 5 " + _graph.FindShortestPathByWeight(0, 5));
@@ -89,26 +67,26 @@ namespace NetworkSimulation
             Console.WriteLine();
             Console.WriteLine("GRAPH event");
             bool isPossition = false;
-            Dictionary<int, Ellipse> currentEllipse = new Dictionary<int, Ellipse>();
             foreach (var p in _possitions)
             {
-                //Console.WriteLine("X: " + (e.GetPosition(this).X - p.Value.X) + " Y: " + (e.GetPosition(this).Y - p.Value.Y));
                 if (((e.GetPosition(this).X - p.Value.X <  32 && e.GetPosition(this).X - p.Value.X > -1)) &&
                     ((e.GetPosition(this).Y - p.Value.Y <  31 && e.GetPosition(this).Y - p.Value.Y > -1)))
                 {
                     isPossition = true;
-                    currentEllipse[p.Key] = _ellipses[p.Key];
-                    _currentVertex = p.Key;
-                    Console.WriteLine("IS possition");
+                    _fromVertex = p.Key;
                 }
             }
             if (!isPossition)
             {
-                Console.WriteLine("NEW");
                 Point possition = e.GetPosition(this);
                 _possitions[_vertex] = possition;
-                Ellipse circle = new Ellipse { Height = 30, Width = 30, StrokeThickness = 2, Stroke = Brushes.Black };
+
+                Ellipse circle = new Ellipse { Height = 30, Width = 30, StrokeThickness = 2, Stroke = Brushes.Black, };
+                SolidColorBrush mySolidColorBrush = new SolidColorBrush();
+                mySolidColorBrush.Color = Color.FromArgb(255, 255, 255, 255);
+                circle.Fill = mySolidColorBrush;
                 _ellipses[_vertex] = circle;
+
                 TextBlock txt = new TextBlock { Height = 20, Width = 20, FontSize = 15 };
                 txt.Text = " " + _vertex;
                 txt.HorizontalAlignment = HorizontalAlignment.Center;
@@ -117,25 +95,22 @@ namespace NetworkSimulation
                 Grid grid = new Grid();
                 grid.Children.Add(circle);
                 grid.Children.Add(txt);
+                _grid[_vertex] = grid;
                 Canvas.SetLeft(grid, possition.X);
                 Canvas.SetTop(grid, possition.Y);
 
                 graphBorder.Children.Add(grid);
 
-
                 _graph.AddVertex(_vertex);
                 _vertex++;
             }
             else
-                ellipse_MouseLeftButtonUp(currentEllipse, sender, e);
+                ellipse_MouseLeftButtonUp(sender, e);
 
         }
 
-        private void ellipse_MouseLeftButtonUp(Dictionary<int, Ellipse> ellipse, object sender, MouseButtonEventArgs e)
+        private void ellipse_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
-            Console.WriteLine("ELLIPSE event");
-            //Line line = new Line();
-            //graphBorder.MouseMove += new MouseEventArgs(ellipse_MouseMove);
             mouseIsDown = true;
         }
 
@@ -143,36 +118,112 @@ namespace NetworkSimulation
         {
             if (mouseIsDown)
             {
-                graphBorder.Children.Remove(line);
+                graphBorder.Children.Remove(_line);
                 Point p = e.GetPosition(this);
-                Point point = _possitions[_currentVertex];
+                Point point = _possitions[_fromVertex];
 
-                line = new Line();
-                line.Visibility = Visibility.Visible;
-                line.StrokeThickness = 2;
-                line.Stroke = Brushes.Black;
-                line.X1 = point.X+15;
-                line.X2 = p.X;
-                line.Y1 = point.Y+15;
-                line.Y2 = p.Y;
-                line.MouseLeftButtonUp += ellipse_MouseLeftButtonUp;
+                _line.Visibility = Visibility.Visible;
+                _line.StrokeThickness = 2;
+                _line.Stroke = Brushes.Black;
+                _line.X1 = point.X+15;
+                _line.X2 = p.X;
+                _line.Y1 = point.Y+15;
+                _line.Y2 = p.Y;
+                _line.MouseLeftButtonUp += line_MouseLeftButtonUp;
 
-                graphBorder.Children.Add(line);
+                graphBorder.Children.Add(_line);
             }
         }
 
-        private void ellipse_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        private void line_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (mouseIsDown)
             {
                 mouseIsDown = false;
-                line = new Line();
-                foreach (var ellipse in _ellipses)
+                graphBorder.Children.Remove(_line);
+                _toVertex = -1;
+                foreach (var p in _possitions)
                 {
-                    Canvas.SetLeft(ellipse.Value, _possitions[ellipse.Key].X);
-                    Canvas.SetTop(ellipse.Value, _possitions[ellipse.Key].Y);
+                    if (((e.GetPosition(this).X - p.Value.X < 32 && e.GetPosition(this).X - p.Value.X > -1)) &&
+                    ((e.GetPosition(this).Y - p.Value.Y < 31 && e.GetPosition(this).Y - p.Value.Y > -1)))
+                    {
+                        _toVertex = p.Key;
+                    }
+                }
+                if (_toVertex >= 0)
+                {
+                    graphBorder.Children.Remove(_grid[_fromVertex]);
+                    graphBorder.Children.Remove(_grid[_toVertex]);
+
+                    graphBorder.Children.Add(_line);
+                    graphBorder.Children.Add(_grid[_fromVertex]);
+                    graphBorder.Children.Add(_grid[_toVertex]);
+
+                    TextBox text = new TextBox { Width = 24, Height = 20, Text = "0"};
+                    text.KeyUp += textBox_KeyUp;
+                    double x = ((_line.X2 + _line.X1) / 2) -5;
+                    double y = ((_line.Y2 + _line.Y1) / 2) - 5;
+                    Canvas.SetLeft(text, x);
+                    Canvas.SetTop(text, y);
+                    graphBorder.Children.Add(text);
+                    _text.Add(new VertexPath(_fromVertex, _toVertex, text, _line));
+                    _graph.AddNeighboor(_fromVertex, _toVertex);
+
+                    _line = null;
+                    _line = new Line();
+                }
+                
+            }
+
+        }
+        private void textBox_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Enter) return;
+            Console.WriteLine("***********");
+
+            foreach (var text in _text)
+            {
+                Console.WriteLine(text.from + " " + text.to);
+
+                if ((sender as TextBox).Equals(text.text))
+                {
+                    _graph.ChangeNeighboorWeight(text.from, text.to, Convert.ToInt32(text.text.Text));
+                    Console.WriteLine("RADO: "+ text.from + " " + text.to);
                 }
             }
+            Print();
+
+            Console.WriteLine();
         }
+
+        private void Print()
+        {
+            _graph.PrintGraph();
+
+            foreach (var vertex in _graph.vertexes)
+            {
+                foreach (var n in vertex.Value.neighboors)
+                {
+                    Console.WriteLine("Key: " + vertex.Key.ToString() + " neighboor: " + n.Key.value + " weight: " + n.Value.ToString());
+                }
+                Console.WriteLine();
+            }
+        }
+        public class VertexPath
+        {
+            public int from;
+            public int to;
+            public TextBox text;
+            public Line line;
+
+            public VertexPath(int first, int second, TextBox txt, Line l)
+            {
+                from = first;
+                to = second;
+                text = txt;
+                line = l;
+            }
+        }
+
     }
 }
