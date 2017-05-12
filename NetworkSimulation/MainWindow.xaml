@@ -6,5 +6,12 @@
         xmlns:local="clr-namespace:NetworkSimulation"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="564">
-    <Grid Margin="0,0,2,0"/>
+    <Grid x:Name="mainBoard" Margin="0,0,2,0" Background="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="427*"/>
+            <ColumnDefinition Width="127*"/>
+        </Grid.ColumnDefinitions>
+        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="319" VerticalAlignment="Top" Width="139" Background="#FF30303A" Grid.ColumnSpan="2" Margin="415,0,0,0"/>
+        <Canvas x:Name="graphBorder" HorizontalAlignment="Left" Height="319" VerticalAlignment="Top" Width="415" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" MouseMove="graphBorder_MouseMove" MouseLeftButtonDown="graphBorder_MouseLeftButtonDown"/>
+    </Grid>
 </Window>
