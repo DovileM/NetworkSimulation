@@ -5,13 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NetworkSimulation"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="564">
-    <Grid x:Name="mainBoard" Margin="0,0,2,0" Background="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
+        Title="MainWindow" Height="486" Width="794">
+    <Grid x:Name="mainBoard" Margin="0,0,2,-1" Background="{DynamicResource {x:Static SystemColors.AppWorkspaceBrushKey}}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="427*"/>
-            <ColumnDefinition Width="127*"/>
+            <ColumnDefinition Width="531*"/>
+            <ColumnDefinition Width="254*"/>
         </Grid.ColumnDefinitions>
-        <Border BorderBrush="Black" BorderThickness="1" HorizontalAlignment="Left" Height="319" VerticalAlignment="Top" Width="139" Background="#FF30303A" Grid.ColumnSpan="2" Margin="415,0,0,0"/>
-        <Canvas x:Name="graphBorder" HorizontalAlignment="Left" Height="319" VerticalAlignment="Top" Width="415" Background="{DynamicResource {x:Static SystemColors.ControlBrushKey}}" MouseMove="graphBorder_MouseMove" MouseLeftButtonDown="graphBorder_MouseLeftButtonDown"/>
+        <Canvas x:Name="graphBorder" HorizontalAlignment="Left" Height="367" VerticalAlignment="Top" Width="530" Background="#FFF0F0F0" MouseMove="graphBorder_MouseMove" MouseLeftButtonDown="graphBorder_MouseLeftButtonDown" MouseRightButtonDown="graphBorder_MouseRightButtonDown"/>
+        <Label Content="Find path" HorizontalAlignment="Left" Margin="12,391,0,0" VerticalAlignment="Top" FontSize="16" Width="103" HorizontalContentAlignment="Center" Height="38"/>
+        <TextBox x:Name="from" HorizontalAlignment="Left" Height="23" Margin="115,396,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" FontSize="14" HorizontalContentAlignment="Center"/>
+        <TextBox x:Name="to" HorizontalAlignment="Left" Height="23" Margin="184,396,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="40" FontSize="14" HorizontalContentAlignment="Center"/>
+        <Label Content="From:" HorizontalAlignment="Left" Margin="115,372,0,0" VerticalAlignment="Top" FontStyle="Italic" Height="24" Width="39"/>
+        <Label Content="To:" HorizontalAlignment="Left" Margin="184,372,0,0" VerticalAlignment="Top" FontStyle="Italic" Height="24" Width="40"/>
+        <Button x:Name="find" Content="Find" HorizontalAlignment="Left" Margin="248,396,0,0" VerticalAlignment="Top" Width="109" FontSize="14" Click="find_Click" Height="21"/>
+        <CheckBox x:Name="byWeight" Content="Find by weight" HorizontalAlignment="Left" Margin="115,423,0,0" VerticalAlignment="Top" Width="109" FontStyle="Italic" Height="14"/>
+        <Label x:Name="distanceLabel" Content="Distance:" HorizontalAlignment="Left" Margin="385,397,0,0" VerticalAlignment="Top" FontSize="20" RenderTransformOrigin="0.5,0.5" Height="42" Width="92">
+            <Label.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="-0.099"/>
+                    <RotateTransform Angle="0.718"/>
+                    <TranslateTransform/>
+                </TransformGroup>
+            </Label.RenderTransform>
+        </Label>
+        <Label x:Name="distance" Content="0" HorizontalAlignment="Left" Margin="483,396,0,0" VerticalAlignment="Top" FontSize="20" FontWeight="Bold" Height="41" Width="24"/>
+        <TextBox x:Name="routingTextBox" HorizontalAlignment="Left" Height="412" Margin="10,31,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="234" Grid.Column="1"/>
+        <Label Content="Routing tables" HorizontalAlignment="Left" Margin="10,3,0,0" VerticalAlignment="Top" FontSize="16" Width="234" HorizontalContentAlignment="Center" Height="38" Grid.Column="1"/>
     </Grid>
 </Window>
