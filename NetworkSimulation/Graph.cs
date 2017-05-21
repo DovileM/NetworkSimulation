@@ -181,12 +181,11 @@ namespace NetworkSimulation
             return p;
         }
 
-        public void PrintTable()
+        public void StartRoutingTable()
         {
             foreach (var vertex in vertexes)
-            {
                 vertex.Value.CreateRoutingTable();
-            }
+
             bool noupdates = false;
             while (!noupdates)
             {
@@ -201,101 +200,58 @@ namespace NetworkSimulation
                 }
             }
             foreach (var vertex in vertexes)
-            {
-                vertex.Value.SendRoutingTableToNeigbhoors();
-            }
-            PrintTable2();
-
+                vertex.Value.DeleteRows();
         }
 
-
-
-        /*public void PrintTable()
+        public string PrintTable()
         {
             StringBuilder routingTables = new StringBuilder();
-
             foreach (var vertex in vertexes)
             {
-                vertex.Value.CreateRoutingTable();
-            }
-            bool noupdates = false;
-            while (!noupdates)
-            {
-                //var method = new StackFrame(1).GetMethod().ReflectedType;
-                //StackTrace stackTrace = new StackTrace(2);
-                //MethodBase methodBase = stackTrace.GetFrame(1).GetMethod();
-                //string method = methodBase.Name;
-                //Console.WriteLine(method);
-
-                routingTables.Clear();
-                //foreach (Window window in Application.Current.Windows)
-                //    if (window.GetType() == typeof(MainWindow))
-                //        (window as MainWindow).routingTextBox.Text = null;
-
-                routingTables.Append("*********************").Append(Environment.NewLine);
-                noupdates = true;
-                foreach (var vertex in vertexes)
+                routingTables.Append("\"").Append(vertex.Value.value).Append("\"").
+                                Append(Environment.NewLine);
+                routingTables.Append("   Dest  |   Cost   |   NextHop   ").Append(Environment.NewLine);
+                routingTables.Append("--------+--------+-------------").Append(Environment.NewLine);
+                foreach (var table in vertex.Value.table)
                 {
-                    if (vertex.Value.update)
-                    {
-                        vertex.Value.SendRoutingTableToNeigbhoors();
-                        noupdates = false;
-                    }
-                    routingTables.Append("\"").Append(vertex.Value.value).Append("\"").
-                                  Append(Environment.NewLine);
-                    routingTables.Append("Dest  |   Cost   |  NextHop").Append(Environment.NewLine);
-                    routingTables.Append("------+----------+-----------").Append(Environment.NewLine);
-                    foreach (var table in vertex.Value.table)
-                    {
-                        routingTables.Append(table.destination).Append("     |  ").Append(table.cost).Append("       |  ").
-                                      Append(table.nextHop).Append(Environment.NewLine);
-                    }
-                    routingTables.Append(Environment.NewLine);
+                    routingTables.Append(string.Format("   {0,3}     |", table.destination)).Append(string.Format("   {0,3}       |", table.cost)).
+                                    Append(string.Format("   {0,3}    ", table.nextHop)).Append(Environment.NewLine);
                 }
-                routingTables.Append("*********************").Append(Environment.NewLine).Append(Environment.NewLine).
-                              Append(Environment.NewLine).Append(Environment.NewLine);
-
-                foreach (Window window in Application.Current.Windows)
-                    if (window.GetType() == typeof(MainWindow))
-                        (window as MainWindow).routingTextBox.Text = routingTables.ToString();
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
+                routingTables.Append(Environment.NewLine);
             }
-        }*/
 
-        public void PrintTable2()
-        {
-            StringBuilder routingTables = new StringBuilder();
-                routingTables.Append("*********************").Append(Environment.NewLine);
-                foreach (var vertex in vertexes)
-                {
-                    routingTables.Append("\"").Append(vertex.Value.value).Append("\"").
-                                  Append(Environment.NewLine);
-                    routingTables.Append("Dest  |   Cost   |  NextHop").Append(Environment.NewLine);
-                    routingTables.Append("------+----------+-----------").Append(Environment.NewLine);
-                    foreach (var table in vertex.Value.table)
-                    {
-                        routingTables.Append(table.destination).Append("     |  ").Append(table.cost).Append("       |  ").
-                                      Append(table.nextHop).Append(Environment.NewLine);
-                    }
-                    routingTables.Append(Environment.NewLine);
-                }
-                routingTables.Append("*********************").Append(Environment.NewLine).Append(Environment.NewLine).
-                              Append(Environment.NewLine).Append(Environment.NewLine);
-
-                foreach (Window window in Application.Current.Windows)
-                    if (window.GetType() == typeof(MainWindow))
-                        (window as MainWindow).routingTextBox.Text = routingTables.ToString();
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine();
+            return routingTables.ToString();
         }
 
+        public Dictionary<int, List<int>> FindPath(int from, int to)
+        {
+            Dictionary<int, List<int>> path = new Dictionary<int, List<int>>();
+            List<int> way = new List<int>();
+            int cost = 0;
+            Vertex first = vertexes[from];
+            way.Add(from);
+            for (int i = 0; i < first.table.Count; i++)
+            {
+                if(first.table[i].destination == to)
+                {
+                    if(first.value == to)
+                        break;
+
+                    way.Add(first.table[i].nextHop);
+                    if(cost == 0)
+                        cost = first.table[i].cost;
+                    if (vertexes.Keys.Contains(first.table[i].nextHop))
+                    {
+                        first = vertexes[first.table[i].nextHop];
+                        i = 0;
+                    }
+                    else
+                        break;
+                }
+            }
+            path.Add(cost,way);
+            return path;
+        }
 
     }
 
@@ -325,6 +281,7 @@ namespace NetworkSimulation
         public Dictionary<Vertex, int> neighboors;
         public List<RoutingTable> table;
         public bool update;
+        public int maxHop;
 
         public Vertex(int v_value)
         {
@@ -338,7 +295,6 @@ namespace NetworkSimulation
 
         public void CreateRoutingTable()
         {
-            //table.Clear();
             foreach (var neighboor in neighboors)
             {
                 bool was = true;
@@ -350,35 +306,48 @@ namespace NetworkSimulation
                         {
                             table[i].cost = neighboors[neighboor.Key];
                             table[i].nextHop = neighboor.Key.value;
-                            update = true;
                         }
                         was = false;
                     }
                 }
                 if (was)
-                {
                     table.Add(new RoutingTable(neighboor.Key.value, neighboor.Key.value, neighboor.Value));
-                    update = true;
-                }
 
+                update = true;
             }
-            //if(update)
-            //    SendRoutingTableToNeigbhoors();
+            for (int i = 0; i < table.Count; i++)
+            {
+                bool exist = false;
+                if (table[i].nextHop != -1)
+                {
+                    foreach (var neighboor in neighboors)
+                    {
+                        if (table[i].nextHop == neighboor.Key.value)
+                            exist = true;
+                    }
+                    if (!exist)
+                        table[i].cost = Int32.MaxValue;
+                }
+            }
+            maxHop = 15;
         }
 
         public void SendRoutingTableToNeigbhoors()
         {
-
-            foreach (var neighboor in neighboors)
+            if (!(maxHop < 0))
             {
-                neighboor.Key.UpdateRoutingTable(this);
+                foreach (var neighboor in neighboors)
+                    neighboor.Key.UpdateRoutingTable(this);
+
+                maxHop--;
+                update = false;
             }
-            update = false;
+            else
+                update = false;
         }
 
         public void UpdateRoutingTable(Vertex current)
         {
-            Console.WriteLine("LALALA");
             for (int i = 0; i < current.table.Count; i++)
             {
                 bool was = false;
@@ -390,34 +359,58 @@ namespace NetworkSimulation
                         {
                             if (current.table[i].cost + neighboors[current] != table[j].cost)
                             {
-                                table[j].cost = current.table[i].cost + neighboors[current];
-                                //table[j].nextHop = current.value;
+                                if (maxHop == 0)
+                                {
+                                    table[j].cost = Int32.MaxValue;
+                                }
+                                else if (current.table[i].cost != Int32.MaxValue)
+                                {
+                                    table[j].cost = current.table[i].cost + neighboors[current];
+
+                                }
+                                else
+                                {
+                                    table[j].cost = Int32.MaxValue;
+                                }
                                 update = true;
+
                             }
                         }
-                        //else 
-                        //{
-                            Console.WriteLine(table[j].cost + " " + current.table[i].cost + " " + neighboors[current]);
-
-                            if (table[j].cost > current.table[i].cost + neighboors[current])
+                        if (table[j].cost > current.table[i].cost + neighboors[current])
+                        {
+                            if (maxHop == 0)
+                                table[j].cost = Int32.MaxValue;
+                            else if (current.table[i].cost != Int32.MaxValue)
                             {
                                 table[j].cost = current.table[i].cost + neighboors[current];
                                 table[j].nextHop = current.value;
-                                update = true;
                             }
-                            was = true;
-                        //}
+                            update = true;
+                        }
+                        was = true;
                     }
                 }
                 if (!was)
                 {
-                Console.WriteLine("PYKST");
-                    table.Add(new RoutingTable(current.table[i].destination, current.value, current.table[i].cost + neighboors[current]));
-                    update = true;
+                    if (current.table[i].cost != Int32.MaxValue && maxHop != 0)
+                    {
+                        table.Add(new RoutingTable(current.table[i].destination, current.value, current.table[i].cost + neighboors[current]));
+                        update = true;
+                    }
                 }
             }
-            
-            Console.WriteLine();
+        }
+
+        public void DeleteRows()
+        {
+            for (int i = 0; i < table.Count; i++)
+            {
+                if(table[i].cost == Int32.MaxValue)
+                {
+                    table.RemoveAt(i);
+                    i--;
+                }
+            }
         }
     }
 }

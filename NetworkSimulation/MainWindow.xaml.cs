@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,6 +32,8 @@ namespace NetworkSimulation
         private int _toVertex;
         private Line _line;
         private List<VertexPath> _text;
+        private bool running;
+        private Thread routing;
 
         public MainWindow()
         {
@@ -47,24 +50,6 @@ namespace NetworkSimulation
             AddHosts(450, 160);
             from.Text = "0";
             to.Text = "1";
-
-            /*
-            Console.WriteLine("Shortest path by weight:");
-            Console.WriteLine("From: 0 to: 6 " + _graph.FindShortestPathByWeight(0, 6));
-            Console.WriteLine("From: 0 to: 5 " + _graph.FindShortestPathByWeight(0, 5));
-            Console.WriteLine("From: 0 to: 2 " + _graph.FindShortestPathByWeight(0, 2));
-            Console.WriteLine("From: 0 to: 4 " + _graph.FindShortestPathByWeight(0, 4));
-            Console.WriteLine("From: 0 to: 1 " + _graph.FindShortestPathByWeight(0, 1));
-            Console.WriteLine();
-
-            Console.WriteLine("Shortest path:");
-            Console.WriteLine("From: 0 to: 6 " + _graph.FindShortestPath(0, 6));
-            Console.WriteLine("From: 0 to: 5 " + _graph.FindShortestPath(0, 5));
-            Console.WriteLine("From: 0 to: 2 " + _graph.FindShortestPath(0, 2));
-            Console.WriteLine("From: 0 to: 4 " + _graph.FindShortestPath(0, 4));
-            Console.WriteLine("From: 0 to: 1 " + _graph.FindShortestPath(0, 1));
-            */
-
         }
 
         public void AddHosts(int x, int y)
@@ -269,9 +254,7 @@ namespace NetworkSimulation
                         break;
                     }
                     else
-                    {
                         text.text.Text = _graph.GetWeightByPath(text.from, text.to).ToString();
-                    }
         }
 
         private void textBox_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -305,13 +288,6 @@ namespace NetworkSimulation
                 Console.WriteLine();
             }
         }
-
-
-        /*private void print_Click(object sender, RoutedEventArgs e)
-        {
-            Print();
-
-        }*/
 
         private void ClearColor()
         {
@@ -366,27 +342,32 @@ namespace NetworkSimulation
 
         private void find_Click(object sender, RoutedEventArgs e)
         {
-            /*ClearColor();
-            distance.Content = "0";
-            int first, second;
-            if (Int32.TryParse(from.Text, out first) && Int32.TryParse(to.Text, out second))
-            {
-                if (byWeight.IsChecked.Value)
-                {
-                    Dictionary<int, List<int>> path = _graph.FindShortestPathByWeight(first, second);
-                    distance.Content = path.Keys.First();
-                    ColorPath(path.Values.First());
-                }
-                else
-                {
-                    List<int> path = _graph.FindShortestPath(first, second);
-                    ColorPath(path);
-                }
-            }*/
-            //_graph.StartRouting();
-            //_graph.PrintGraph();
-            _graph.PrintTable();
+            running = true;
+            routing = new Thread(Routing);
+            routing.Start();
+        }
 
+        public void Routing()
+        {
+            while (running)
+            {
+                _graph.StartRoutingTable();
+                Dispatcher.Invoke(() => ClearColor());
+                Dispatcher.Invoke(() => distance.Content = "0");
+                int first = -1, second = -1;
+                bool ok = false;
+                Dispatcher.Invoke(() => ok = Int32.TryParse(from.Text, out first) && Int32.TryParse(to.Text, out second));
+
+                if (ok)
+                {
+
+                    Dictionary<int, List<int>> path = _graph.FindPath(first, second);
+                    Dispatcher.Invoke(() => distance.Content = path.Keys.First());
+                    Dispatcher.Invoke(() => ColorPath(path.Values.First()));
+                }
+                Dispatcher.Invoke(() => routingTextBox.Text = _graph.PrintTable());
+                Thread.Sleep(3000);
+            }
         }
 
         public class VertexPath
@@ -403,6 +384,12 @@ namespace NetworkSimulation
                 text = txt;
                 line = l;
             }
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            running = false;
+            routing.Join();
         }
     }
 }
