@@ -1,22 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using System.Windows;
 
 namespace NetworkSimulation
 {
     public class Graph
     {
         public Dictionary<int, Vertex> vertexes;
-        //public Dictionary<int, Dictionary<int, RoutingTable>> routingTable;
 
         public Graph()
         {
             vertexes = new Dictionary<int, Vertex>();
-            //routingTable = new Dictionary<int, Dictionary<int, RoutingTable>>();
         }
 
         public void AddVertex(int value)
@@ -88,44 +83,6 @@ namespace NetworkSimulation
             return graph.ToString();
         }
 
-        public List<int> FindShortestPath(int from, int to)
-        {
-            Queue<Vertex> queue = new Queue<Vertex>();
-            List<int> visited = new List<int>();
-            Dictionary<int, List<int>> path = new Dictionary<int, List<int>>();
-            foreach (var vertex in vertexes.Keys)
-            {
-                path.Add(vertex, new List<int>());
-            }
-            queue.Enqueue(vertexes[from]);
-            visited.Add(from);
-            path[from].Add(from);
-            while(queue.Count != 0)
-            {
-                Vertex current = queue.Dequeue();
-                foreach (var neighboor in current.neighboors)
-                {
-                    if (!visited.Contains(neighboor.Key.value))
-                    {
-                        path[neighboor.Key.value].Clear();
-                        queue.Enqueue(neighboor.Key);
-                        visited.Add(neighboor.Key.value);
-                        foreach (var way in path[current.value])
-                        {
-                            path[neighboor.Key.value].Add(way);
-                        }
-                        path[neighboor.Key.value].Add(neighboor.Key.value);
-                    }
-                }
-            }
-            /*StringBuilder str = new StringBuilder();
-            str.Append(" way: ");
-            foreach (var way in path[to])
-            {
-                str.Append(way).Append(" -> ");
-            }*/
-            return path[to];
-        }
         public int GetWeightByPath(int from, int to)
         {
             int weight = 0;
@@ -139,48 +96,7 @@ namespace NetworkSimulation
             }
             return weight;
         }
-        public Dictionary<int,List<int>> FindShortestPathByWeight(int from, int to)
-        {
-            Queue<Vertex> queue = new Queue<Vertex>();
-            Dictionary<int,Path> path = new Dictionary<int,Path>();
-            foreach (var vertex in vertexes.Keys)
-            {
-                path.Add(vertex,new Path());
-                path[vertex].cost = int.MaxValue;
-                path[vertex].path = new List<int>();
-            }
-            queue.Enqueue(vertexes[from]);
-            path[from].cost = 0;
-            path[from].path.Add(from);
-            while(queue.Count != 0)
-            {
-                Vertex current = queue.Dequeue();
-                foreach (var neighboor in current.neighboors)
-                {
-                    if (path[neighboor.Key.value].cost > (neighboor.Value + path[current.value].cost))
-                    {
-                        path[neighboor.Key.value].path.Clear();
-                        queue.Enqueue(neighboor.Key);
-                        path[neighboor.Key.value].cost = neighboor.Value + path[current.value].cost;
-                        foreach (var way in path[current.value].path)
-                        {
-                            path[neighboor.Key.value].path.Add(way);
-                        }
-                        path[neighboor.Key.value].path.Add(neighboor.Key.value);
-                    }
-                }
-            }
-            /*StringBuilder str = new StringBuilder();
-            str.Append("cost: ").Append(path[to].cost.ToString()).Append(" way: ");
-            foreach (var way in path[to].path)
-            {
-                str.Append(way).Append(" -> ");
-            }*/
-            Dictionary<int, List<int>> p = new Dictionary<int, List<int>>();
-            p.Add(path[to].cost, path[to].path);
-            return p;
-        }
-
+        
         public void StartRoutingTable()
         {
             foreach (var vertex in vertexes)
